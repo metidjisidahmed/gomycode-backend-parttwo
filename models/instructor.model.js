@@ -7,17 +7,17 @@ var validateEmail = function(email) {
 };
 
 
-var studentSchema = new Schema({
-     fullName : {
-         firstName : {
-             type : Schema.Types.String,
-             required : true
-         },
-         lastName : {
-             type : Schema.Types.String,
-             required : true
-         }
-     },
+var instructorSchema = new Schema({
+    fullName : {
+        firstName : {
+            type : Schema.Types.String,
+            required : true
+        },
+        lastName : {
+            type : Schema.Types.String,
+            required : true
+        }
+    },
     // source :  https://stackoverflow.com/questions/18022365/mongoose-validate-email-syntax
     email: {
         type: Schema.Types.String,
@@ -28,19 +28,16 @@ var studentSchema = new Schema({
         validate: [validateEmail, 'Please fill a valid email address'],
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
-    groups : [{
-         type : Schema.Types.ObjectId,
-         ref : "Group",
-    }] ,
     gender : {
         enum: ['M', 'F'],
+        required : true
     },
     birthday : {
-         type : Schema.Types.Date,
+        type : Schema.Types.Date,
         required : true
     }
 }, {
     timestamps: true
 })
 
-module.exports= mongoose.model("Student"  , studentSchema )
+module.exports= mongoose.model("Instructor"  , instructorSchema )
