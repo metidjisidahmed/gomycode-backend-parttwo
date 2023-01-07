@@ -8,10 +8,13 @@ const studentSchema = require('./models/student.model')
 
 
 
+
 mongoose.set('strictQuery', false);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+const studentsRouter = require('./routes/students')
+
 
 var app = express();
 const url ='mongodb://127.0.0.1:27017/Gomycode' ;
@@ -37,6 +40,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/students' , studentsRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
