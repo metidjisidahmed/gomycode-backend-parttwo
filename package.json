@@ -1,0 +1,23 @@
+{
+  "name": "gomycode-backend-parttwo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "start_db": "mongod --dbpath=data --bind_ip=127.0.0.1",
+    "start_dev" : "nodemon ./bin/www"
+  },
+  "dependencies": {
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "http-errors": "~1.6.3",
+    "mongoose": "^6.8.2",
+    "morgan": "~1.9.1",
+    "pug": "2.0.0-beta11",
+    "validator": "^13.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
