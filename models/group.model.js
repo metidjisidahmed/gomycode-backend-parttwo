@@ -1,6 +1,6 @@
 let mongoose=require('mongoose')
 let Schema =mongoose.Schema
-
+require('mongoose-type-url')
 
 
 var groupSchema = new Schema({
@@ -30,4 +30,4 @@ var groupSchema = new Schema({
     timestamps: true
 })
 
-module.exports= mongoose.model("Course"  , courseSchema )
+module.exports= mongoose.model("Group"  , groupSchema )

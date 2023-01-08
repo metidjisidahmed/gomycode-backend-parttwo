@@ -20,6 +20,32 @@ router.post('/', function(req, res, next) {
     })
     console.log("req body Name =", req.body.name)
 
-});
+})
+    .get('/' , function (req , res){
+        console.log("REQ QUERY =", req.query)
+        studentSchema.find(req.query , function (err , students){
+            if(err){
+                res.json({ success : false,  error : err.message , data : null})
+            }else{
+                res.json({ success : true , error : null , data : students})
+            }
+        })
+    });
+
+router.get('/:id' , function (req , res){
+    studentSchema.findOne({_id :  req.params.id} , function (err , student){
+        if(err){
+            res.json({ success : false,  error : err.message , data : null})
+        }else{
+            if(student==null){
+                res.json({ success : false , error : "unexisted student", data : student})
+
+            }else{
+                res.json({ success : true , error : null , data : student})
+
+            }
+        }
+    })
+} )
 
 module.exports = router;

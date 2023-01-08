@@ -30,7 +30,6 @@ var instructorSchema = new Schema({
     },
     gender : {
         enum: ['M', 'F'],
-        required : true
     },
     birthday : {
         type : Schema.Types.Date,
