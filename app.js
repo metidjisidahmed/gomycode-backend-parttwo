@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
 const studentSchema = require('./models/student.model')
-
+const cors = require('cors')
 
 
 
@@ -18,6 +18,8 @@ const instructorsRouter = require('./routes/instructors')
 const groupsRouter = require('./routes/groups')
 
 var app = express();
+app.use(cors())
+
 const url ='mongodb://127.0.0.1:27017/Gomycode' ;
 const connect = mongoose.connect(url );
 connect.then((db)=>{

@@ -47,5 +47,37 @@ router.get('/:id' , function (req , res){
         }
     })
 } )
+    .put('/:id' , function (req , res){
+    studentSchema.findOneAndUpdate({_id :  req.params.id} , {$set : req.body } , { new : true} , function (err , student){
+        if(err){
+            res.json({ success : false,  error : err.message , data : null})
+        }else{
+            if(student==null){
+                res.json({ success : false , error : "unexisted student", data : student})
+            }else{
+                res.json({ success : true , error : null , data : student})
+
+            }
+        }
+    })
+} )
+    .delete('/:id' , function (req , res){
+        studentSchema.findOneAndDelete({_id : req.params.id} , (err , student)=>{
+            if(err){
+                res.json({success : false, error : err.message , data : student})
+            }else{
+
+                if(student==null){
+                    res.json({ success : false , error : "unexisted student", data : student})
+                }else{
+                    res.json({ success : true , error : null , data : student})
+
+                }
+            }
+        })
+
+    } )
+
+
 
 module.exports = router;
