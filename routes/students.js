@@ -1,26 +1,65 @@
 var express = require('express');
+var bcrypt = require('bcrypt');
+
 var router = express.Router();
 var studentSchema = require('../models/student.model')
 
 
 /* POST /students to create student */
-router.post('/', function(req, res, next) {
+router.post('/signup', function(req, res, next) {
     const newStudent = new studentSchema()
     newStudent.fullName= req.body.fullName
     newStudent.email= req.body.email
     newStudent.gender= req.body.gender
     newStudent.groups= []
     newStudent.birthday= req.body.birthday
-    newStudent.save(function (err , student){
-        if(err){
+    bcrypt.hash(req.body.password  , 12)
+        .then(hashedPassword=>{
+            newStudent.password= hashedPassword
+            console.log("req body Name =", req.body.name)
+            return  newStudent.save()
+        })
+        .then(student=>{
+            res.json({ success : true , error : null , data : { accountDetail : student , token : "jsonwebtoken" } })
+        })
+        .catch(err=>{
             res.json({ success : false,  error : err.message , data : null})
-        }else{
-            res.json({ success : true , error : null , data : student})
-        }
-    })
-    console.log("req body Name =", req.body.name)
+        })
 
 })
+router.post('/login', function(req, res, next) {
+    // const email = req.body.email
+    // const password = req.body.password
+    const {email , password} = req.body
+
+    studentSchema.findOne({email  : email})
+        .then(foundStudent=>{
+            // confirm that we have already a CREATED student with this mail
+            if(foundStudent != null){
+                return bcrypt.compare(password ,foundStudent.password )
+            }else{
+                // go to catch
+                throw new Error("unexisted user with this mail , please signup ")
+            }
+        })
+        .then(bool=>{
+            //  he writes the correct password
+            if(bool===true){
+                res.json({ success : true , error : null , data : "jsonwebtoken"})
+            }else{
+                // go to catch
+                throw new Error("wrong password")
+            }
+        })
+
+        .catch(err=>{
+
+            res.json({ success : false,  error : err.message , data : null})
+
+        })
+
+})
+
     .get('/' , function (req , res){
         console.log("REQ QUERY =", req.query)
         studentSchema.find(req.query , function (err , students){

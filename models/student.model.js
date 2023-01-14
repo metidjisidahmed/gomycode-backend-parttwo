@@ -28,6 +28,10 @@ var studentSchema = new Schema({
         validate: [validateEmail, 'Please fill a valid email address'],
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
+    password : {
+        type : Schema.Types.String,
+        required : true
+    },
     groups : [{
          type : Schema.Types.ObjectId,
          ref : "Group",
