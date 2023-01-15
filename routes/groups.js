@@ -1,17 +1,58 @@
 var express = require('express');
+require("firebase/storage"); // must be required for this to work
+
 const groupSchema = require("../models/group.model");
 const studentSchema = require("../models/student.model")
 var router = express.Router();
+const firebase = require("../db");
+const firebaseStorage = firebase.storage().ref(); // create a reference to storage
+
+
+const multer = require('multer');
+global.XMLHttpRequest = require("xhr2"); // must be used to avoid bug
+
+
+
+// Setting up multer as a middleware to grab photo uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage }).single('file');
+
+
+require("firebase/storage"); // must be required for this to work
+global.XMLHttpRequest = require("xhr2"); // must be used to avoid bug
 
 /* GET home page. */
-router.post('/', function(req, res, next) {
-    groupSchema.create(req.body , function (err , group){
-        if(err){
-            res.json({ success : false,  error : err.message , data : null})
-        }else{
+router.post('/',upload ,  function(req, res, next) {
+    const file = req.file;
+    console.log("file =", file)
+    const timestamp = Date.now();
+    const name = file.originalname.split(".")[0];
+    const type = file.originalname.split(".")[1];
+    const fileName = `${name}_${timestamp}.${type}`;
+    // Step 1. Create reference for file name in cloud storage
+    const imageRef = firebaseStorage.child(fileName);
+    // Step 2. Upload the file in the bucket storage
+    // const snapshot = await imageRef.put(file.buffer);
+    imageRef.put(file.buffer)
+        .then(snapshot=>{
+            console.log("sna^chot = ", snapshot)
+            return snapshot.ref.getDownloadURL()
+        })
+        // Step 3. Grab the public url
+
+        .then(downloadUrl=>{
+            return groupSchema.create({...req.body , avatarUrl : downloadUrl })
+        })
+        .then(group=>{
             res.json({ success : true , error : null , data : group})
-        }
-    } )
+
+        })
+        .catch(err=>{
+            res.json({ success : false,  error : err.message , data : null})
+
+        })
+
+
 
 })
     .get('/' , function (req ,res ){
