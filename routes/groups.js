@@ -1,45 +1,100 @@
 var express = require('express');
-require("firebase/storage"); // must be required for this to work
+const { Storage } = require("@google-cloud/storage");
+
+const UUID = require("uuid-v4");
+const formidable = require("formidable-serverless");
+
+
+const storage = new Storage({
+    keyFilename: "admin.json",
+});
 
 const groupSchema = require("../models/group.model");
 const studentSchema = require("../models/student.model")
 var router = express.Router();
-const firebase = require("../db");
-const firebaseStorage = firebase.storage().ref(); // create a reference to storage
-
-
-const multer = require('multer');
-global.XMLHttpRequest = require("xhr2"); // must be used to avoid bug
 
 
 
-// Setting up multer as a middleware to grab photo uploads
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage }).single('file');
+
+const axios= require('axios')
+
+router.post('/', function(req, res, next) {
+    const form = new formidable.IncomingForm({ multiples: true });
+    let uuid = UUID();
+
+    form.parse(req ,(err, fields, files) => {
+        console.log("FILES = ", files)
+        console.log("FILEDS =", fields)
+        const file = files.file;
+        if (err || file.size==0) {
+            throw new Error("There was an error parsing the files")
+
+        }
+        // url of the uploaded image
+
+        // const docID = userRef.doc().id;
+        const bucket = storage.bucket(process.env.BUCKET_STORAGE);
+        const timestamp = Date.now();
+        const name = file.name.split(".")[0];
+        const type = file.name.split(".")[1];
+        const fileName = `${name}_${timestamp}.${type}`;
+        bucket.upload(file.path, {
+            destination: `groups/avatars/${fileName}`,
+            resumable: true,
+            metadata: {
+                metadata: {
+                    firebaseStorageDownloadTokens: uuid,
+                },
+            },
+        })
+            .then(imageResponse=>{
+                let imageUrl;
+                var downLoadPath =
+                    "https://firebasestorage.googleapis.com/v0/b/go-my-code-code-managment.appspot.com/o/";
+                imageUrl =
+                    downLoadPath +
+                    encodeURIComponent(imageResponse[0].name) +
+                    "?alt=media&token=" +
+                    uuid;
+                return groupSchema.create({...fields , avatarUrl : imageUrl })
+
+            })
+            .then(group=>{
+                res.json({ success : true , error : null , data : group})
+
+            })
+            .catch(err=>{
+                console.log("error =", err)
+                res.status(500).json({ success : false,  error : err.message , data : null})
+
+            })
+    })
 
 
-require("firebase/storage"); // must be required for this to work
-global.XMLHttpRequest = require("xhr2"); // must be used to avoid bug
-
-/* GET home page. */
-router.post('/',upload ,  function(req, res, next) {
     const file = req.file;
     console.log("file =", file)
-    const timestamp = Date.now();
-    const name = file.originalname.split(".")[0];
-    const type = file.originalname.split(".")[1];
-    const fileName = `${name}_${timestamp}.${type}`;
+
+    // const timestamp = Date.now();
+    // const name = file.originalname.split(".")[0];
+    // const type = file.originalname.split(".")[1];
+    // const fileName = `${name}_${timestamp}.${type}`;
     // Step 1. Create reference for file name in cloud storage
-    const imageRef = firebaseStorage.child(fileName);
+    // const imageRef = firebaseStorage.child(fileName);
     // Step 2. Upload the file in the bucket storage
     // const snapshot = await imageRef.put(file.buffer);
-    imageRef.put(file.buffer)
-        .then(snapshot=>{
-            console.log("sna^chot = ", snapshot)
-            return snapshot.ref.getDownloadURL()
-        })
-        // Step 3. Grab the public url
+    axios.post("http://127.0.0.1:5000/groups/avatar-image", req)
+    // bucket.upload( file.path, {
+    //     destination: `${fileName}`,
+    //     resumable: true,
+    //     metadata: {
+    //         metadata: {
+    //             firebaseStorageDownloadTokens: fileName,
+    //         },
+    //     },
+    // })
+    // imageRef.put(file)
 
+        // Step 3. Grab the public url
         .then(downloadUrl=>{
             return groupSchema.create({...req.body , avatarUrl : downloadUrl })
         })
@@ -48,7 +103,8 @@ router.post('/',upload ,  function(req, res, next) {
 
         })
         .catch(err=>{
-            res.json({ success : false,  error : err.message , data : null})
+            console.log("error =", err)
+            res.status(500).json({ success : false,  error : err.message , data : null})
 
         })
 
@@ -222,6 +278,63 @@ router.post('/add-student-v4/:groupId' , function (req , res){
         })
 
 })
+
+// COPY-PASTE code from
+router.post("/avatar-image", async (req, res) => {
+    const form = new formidable.IncomingForm({ multiples: true });
+    let uuid = UUID();
+
+    form.parse(req ,(err, fields, files) => {
+        console.log("FILE IN FIREBASE = ", files)
+        const file = files.file;
+        if (err || file.size==0) {
+            throw new Error("There was an error parsing the files")
+
+        }
+        // url of the uploaded image
+
+        // const docID = userRef.doc().id;
+        const bucket = storage.bucket(process.env.BUCKET_STORAGE);
+        const timestamp = Date.now();
+        const name = file.name.split(".")[0];
+        const type = file.name.split(".")[1];
+        const fileName = `${name}_${timestamp}.${type}`;
+        bucket.upload(file.path, {
+            destination: `groups/avatars/${fileName}`,
+            resumable: true,
+            metadata: {
+                metadata: {
+                    firebaseStorageDownloadTokens: uuid,
+                },
+            },
+        })
+            .then(imageResponse=>{
+                let imageUrl;
+                var downLoadPath =
+                    "https://firebasestorage.googleapis.com/v0/b/go-my-code-code-managment.appspot.com/o/";
+                imageUrl =
+                    downLoadPath +
+                    encodeURIComponent(imageResponse[0].name) +
+                    "?alt=media&token=" +
+                    uuid;
+                res.status(200).json({
+                    err : null,
+                    success : true,
+                    data : imageUrl
+                })
+
+            })
+            .catch(err=>{
+                res.status(500).json({
+                    err : err.message,
+                    success : false,
+                    data : null
+                })
+            })
+    })
+
+
+});
 
 
 module.exports = router;
